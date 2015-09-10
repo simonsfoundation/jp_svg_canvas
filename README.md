@@ -1,4 +1,4 @@
-# jp_svg_canvas
+# jp_svg_canvas #
 
 A very simple SVG canvas proxy widget for Jupyter visualizations.
 
@@ -11,7 +11,7 @@ The widget permits Python code to
 - Respond to mouse events in the canvas.
 
 
-# Notes
+# Notes #
 
 I had to manually upgrade ipython and ipywidgets to the latest versions.
 ---
