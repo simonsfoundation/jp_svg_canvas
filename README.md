@@ -11,10 +11,11 @@ The widget permits Python code to
 - Respond to mouse events in the canvas.
 
 
-# Notes #
+**Notes**
 
 I had to manually upgrade ipython and ipywidgets to the latest versions.
----
+
+```
 pip install ipython --upgrade
 pip install ipywidgets --upgrade
----
+```
