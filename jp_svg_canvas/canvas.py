@@ -22,6 +22,7 @@ def load_javascript_support(verbose=False):
     """
     my_dir = os.path.dirname(__file__)
     js_filename = os.path.join(my_dir, "canvas.js")
+    assert os.path.exists(js_filename)
     if verbose:
         print("loading javascript from", repr(js_filename))
     display(Javascript(js_filename))
