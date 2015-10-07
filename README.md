@@ -19,3 +19,5 @@ I had to manually upgrade ipython and ipywidgets to the latest versions.
 pip install ipython --upgrade
 pip install ipywidgets --upgrade
 ```
+
+[![Binder](http://mybinder.org/badge.svg)](http://mybinder.org/repo/simonsfoundation/jp_svg_canvas)
