@@ -42,6 +42,9 @@ class SVGCanvasWidget(widgets.DOMWidget):
     view_miny = 0
     view_width = 500
     view_height = 500
+
+    # The bounding box set in response to "fit" command.
+    boundingBox = Dict({}, sync=True)
     
     # Canvas width
     width = Float(500, sync=True)
@@ -161,6 +164,11 @@ class SVGCanvasWidget(widgets.DOMWidget):
         for name in names:
             if name in n2c:
                 del n2c[name]
+
+    def fit(self, changeView=True):
+        "add a 'fit' command to the command buffer (fit to bounding box)"
+        command = {"command": "fit", "changeView": changeView}
+        self.add_command(command)
 
     def get_style(self):
         "Get the current SVG style."
