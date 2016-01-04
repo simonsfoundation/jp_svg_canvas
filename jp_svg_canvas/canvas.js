@@ -93,6 +93,22 @@ require(["widgets/js/widget", "widgets/js/manager"], function(widget, manager){
                 method(that, command_dict);
             }
         },
+
+        do_fit: function(that, info) {
+            // fit viewport to bounding box.
+            var svg = that.$svg[0];
+            var bbox = svg.getBBox();
+            var D = {"width": bbox.width, "height": bbox.height, "x": bbox.x, "y": bbox.y}
+            var vbox = "" + D.x + " " + D.y + " " + D.width + " " + D.height;
+            if ((D.width > 0) && (D.height > 0)) {
+                that.model.set("boundingBox", D);
+                if (info.changeView) {
+                    that.model.set("viewBox", vbox);
+                }
+                // Element viewBox will be updated later by model change.
+                that.touch();
+            }
+        },
         
         do_add_element: function (that, info) {
             //debugger;
