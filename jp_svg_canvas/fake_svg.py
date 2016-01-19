@@ -17,11 +17,13 @@ EMBEDDING_COUNT = [0]
 
 class FakeCanvasWidget(object):
 
-    def __init__(self, viewBox):
+    def __init__(self, viewBox, filename="diagram.png", format="image/png"):
         self.viewBox = viewBox
         self.canvas_commands = []
         self.font = "Arial"  # default
         self.font_size = 10
+        self.filename = filename
+        self.format = format
 
     def _add(self, command, *args):
         self.canvas_commands.append(self._call(command, *args))
@@ -113,7 +115,9 @@ class FakeCanvasWidget(object):
             identifier=identifier, 
             width=width, 
             height=height, 
-            commands=commands)
+            commands=commands,
+            format=self.format,
+            filename=self.filename)
 
     def embed(self):
         display(HTML(self.embedding()))
@@ -134,7 +138,16 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 (function () {{
     var c = document.getElementById("{identifier}");
     var ctx = c.getContext("2d");
+    // format the canvas
     {commands}
+    // append the download link
+    var data_url = c.toDataURL("{format}");
+    var link = document.createElement("a");
+    link.download = "{filename}";
+    link.href = data_url;
+    $(link).html("Download as {format}: {filename}");
+    $(c).after(link);
+    $(c).after("<br>")
 }})();
 </script>
 """
