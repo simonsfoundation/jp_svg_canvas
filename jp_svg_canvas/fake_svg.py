@@ -17,7 +17,29 @@ EMBEDDING_COUNT = [0]
 
 class FakeCanvasWidget(object):
 
-    def __init__(self, viewBox, filename="diagram.png", format="image/png"):
+    def __init__(self, viewBox, filename="diagram.png", format="image/png", dimension=800):
+        """
+        Fake SVG canvas which writes to an HTML5 canvas.
+        This object is "write once" and does not support updates or interactions.
+        The implementation is primarily intended to support image conversion
+        for visualizations and static embedding of diagrams in IPython notebooks.
+
+        Parameters
+        ----------
+
+        viewBox: str
+            The SVG viewBox parameter to emulate.
+
+        filename: str
+            The filename to use for image download link.
+
+        format: str
+            The MIME type for image conversion.
+
+        dimension: int 
+            The size of the largest dimension for the image.
+        """
+        self.dimension = dimension
         self.viewBox = viewBox
         self.canvas_commands = []
         self.font = "Arial"  # default
@@ -66,8 +88,10 @@ class FakeCanvasWidget(object):
     def text(self, name, x, y, text, fill="black", event_cb= None, style_dict=None, **other_attributes):
         if not style_dict:
             style_dict = {}
+        style_dict = style_dict.copy()
+        style_dict.update(other_attributes)
         f = self.font = style_dict.get("font", self.font)
-        s = self.font_size = style_dict.get("font_size", self.font_size)
+        s = self.font_size = style_dict.get("font-size", self.font_size)
         self._assign("ctx.font", "%spx %s" % (s, f))
         self._assign("ctx.fillStyle", fill)
         ta = style_dict.get("text-anchor", "start")
@@ -108,13 +132,19 @@ class FakeCanvasWidget(object):
     def embedding(self):
         c = EMBEDDING_COUNT[0] = EMBEDDING_COUNT[0] + 1
         identifier = "jp_svg_canvas_fake_svg_" + str(c)
-        [x0, y0, width, height] = map(int, self.viewBox.split())
+        [x0, y0, width, height] = map(float, self.viewBox.split())
+        dimension = self.dimension
+        minside = min(width, height)
+        scale = dimension * 1.0/minside
+        swidth = scale * width
+        sheight = scale * height
+        scaling = self._call("ctx.scale", scale, scale)
         translation = self._call("ctx.translate", -x0, -y0)
-        commands = "\n    ".join([translation] + self.canvas_commands)
+        commands = "\n    ".join([scaling, translation] + self.canvas_commands)
         return EMBED_TEMPLATE.format(
             identifier=identifier, 
-            width=width, 
-            height=height, 
+            width=swidth, 
+            height=sheight, 
             commands=commands,
             format=self.format,
             filename=self.filename)
