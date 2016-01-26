@@ -129,7 +129,7 @@ class FakeCanvasWidget(object):
         self._add("ctx.rect", x, y, width, height)
         self._add("ctx.fill")
 
-    def embedding(self):
+    def embedding(self, preview=True):
         c = EMBEDDING_COUNT[0] = EMBEDDING_COUNT[0] + 1
         identifier = "jp_svg_canvas_fake_svg_" + str(c)
         [x0, y0, width, height] = map(float, self.viewBox.split())
@@ -141,16 +141,20 @@ class FakeCanvasWidget(object):
         scaling = self._call("ctx.scale", scale, scale)
         translation = self._call("ctx.translate", -x0, -y0)
         commands = "\n    ".join([scaling, translation] + self.canvas_commands)
+        visible = "true"
+        if not preview:
+            visible = "false"
         return EMBED_TEMPLATE.format(
             identifier=identifier, 
             width=swidth, 
             height=sheight, 
             commands=commands,
             format=self.format,
-            filename=self.filename)
+            filename=self.filename,
+            visible=visible)
 
-    def embed(self):
-        display(HTML(self.embedding()))
+    def embed(self, preview=True):
+        display(HTML(self.embedding(preview=preview)))
 
 class symb:
     "unquoted symbolic javascript fragment"
@@ -168,6 +172,19 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 (function () {{
     var c = document.getElementById("{identifier}");
     var ctx = c.getContext("2d");
+    var visible = {visible};
+    var showhide = function () {{
+        if (visible) {{
+            $(c).show();
+        }} else {{
+            $(c).hide();
+        }}
+    }};
+    var toggle_visibility = function() {{
+        visible = !visible;
+        showhide();
+    }};
+    showhide();
     // format the canvas
     {commands}
     // append the download link
@@ -176,8 +193,12 @@ Your browser does not support the HTML5 canvas tag.</canvas>
     link.download = "{filename}";
     link.href = data_url;
     $(link).html("Download as {format}: {filename}");
-    $(c).after(link);
-    $(c).after("<br>")
+    $(c).before(link);
+    $(c).before("<br/>");
+    $(c).before("<em>Download link may fail for large and complex images. If so capture preview.&nbsp;</em>");
+    var vlink = $("<button>show/hide {filename} preview</button>").click(toggle_visibility);
+    $(c).before(vlink);
+    $(c).before("<br/>");
 }})();
 </script>
 """
