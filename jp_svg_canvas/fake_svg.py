@@ -199,6 +199,7 @@ Your browser does not support the HTML5 canvas tag.</canvas>
     var vlink = $("<button>show/hide {filename} preview</button>").click(toggle_visibility);
     $(c).before(vlink);
     $(c).before("<br/>");
+    link.scrollIntoView();
 }})();
 </script>
 """
