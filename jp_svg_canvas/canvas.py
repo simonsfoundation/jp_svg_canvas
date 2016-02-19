@@ -3,7 +3,7 @@ from __future__ import print_function # For py 2.7 compat
 from IPython.display import display, Javascript
 #from IPython.html import widgets
 import ipywidgets as widgets
-from traitlets import Unicode, Float, List, Dict
+from traitlets import Unicode, Float, List, Dict, HasTraits
 import json
 import os
 import pprint
@@ -28,10 +28,13 @@ def load_javascript_support(verbose=False):
     display(Javascript(js_filename))
 
 
-class SVGCanvasWidget(widgets.DOMWidget):
+class SVGHelperMixin(HasTraits):
     """
-    Jupyter notebook widget which presents an SVG canvas.
+    Common operations between interactive and embedded/noninteractive canvas implementations.
     """
+
+    # XXX note: for some reason the traitlets don't work right with mixins 
+    # in the widget protobol, so they are duplicated...
     
     # The javascript view name.
     _view_name = Unicode('SVGCanvasView', sync=True)
@@ -77,7 +80,128 @@ class SVGCanvasWidget(widgets.DOMWidget):
     # If set False then event callbacks attached to descendent elements to
     # the SVG canvas will not fire -- only the global default callback will fire.
     local_events = True
+
+    def get_style(self):
+        "Get the current SVG style."
+        return json.loads(self.style)
     
+    def set_style(self, style_dict):
+        "Set the current SVG style."
+        self.style = json.dumps(style_dict)
+        
+    def add_style(self, key, value):
+        "Add an entry to the SVG style."
+        style_dict = self.get_style()
+        style_dict[key] = value
+        self.set_style(style_dict)
+
+    def set_view_box(self, minx, miny, width, height):
+        "Change the SVG view box."
+        assert width != 0
+        assert height != 0
+        self.view_minx = minx
+        self.view_miny = miny
+        self.view_width = width
+        self.view_height = height
+        self.viewBox = "%s %s %s %s" % (minx, miny, width, height)
+        
+    def text(self, name, x, y, text, fill="black", event_cb= None, style_dict=None, **other_attributes):
+        "Add command to create a text element to the command buffer."
+        tag = "text"
+        atts = other_attributes.copy()
+        atts["fill"] = fill
+        atts["x"] = x
+        atts["y"] = y
+        self.add_element(name, tag, atts, style_dict, text=text, event_callback=event_cb)
+
+    def line(self, name, x1, y1, x2, y2, color="black", width=None, 
+             event_cb=None, style_dict=None, **other_attributes):
+        "Add a command to create a line element ot the command buffer."
+        tag = "line"
+        atts = other_attributes.copy()
+        atts["x1"] = x1
+        atts["y1"] = y1
+        atts["x2"] = x2
+        atts["y2"] = y2
+        if width:
+            atts["stroke-width"] = width
+        atts["stroke"] = color
+        self.add_element(name, tag, atts, style_dict, event_callback=event_cb)
+        
+    def circle(self, name, cx, cy, r, fill="black", event_cb=None, style_dict=None,
+              **other_attributes):
+        "Add a command to create a circle element to the command buffer."
+        tag = "circle"
+        atts = other_attributes.copy()
+        atts["cx"] = cx
+        atts["cy"] = cy
+        atts["r"] = r
+        atts["fill"] = fill
+        self.add_element(name, tag, atts, style_dict, event_callback=event_cb)
+
+    def rect(self, name, x, y, width, height, fill="black", event_cb=None, style_dict=None,
+            **other_attributes):
+        "Add a command to create a rectangle element to the command buffer."
+        tag = "rect"
+        atts = other_attributes.copy()
+        atts["x"] = x
+        atts["y"] = y
+        atts["width"] = width
+        atts["height"] = height
+        atts["fill"] = fill
+        self.add_element(name, tag, atts, style_dict, event_callback=event_cb)
+
+class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
+    """
+    Jupyter notebook widget which presents an SVG canvas.
+    """
+
+    # The javascript view name.
+    _view_name = Unicode('SVGCanvasView', sync=True)
+    
+    # SVG viewBox
+    viewBox = Unicode("0 0 500 500", sync=True)
+    view_minx = 0
+    view_miny = 0
+    view_width = 500
+    view_height = 500
+
+    # The bounding box set in response to "fit" command.
+    boundingBox = Dict({}, sync=True)
+    
+    # Canvas width
+    width = Float(500, sync=True)
+    
+    # Canvas height
+    height = Float(500, sync=True)
+    
+    # SVG styling, JSON encoded dictionary
+    style = Unicode("{}", sync=True)
+    
+    # JSON encoded sequence of dictionaries describing actions.
+    commands = Unicode("[]", sync=True)
+    
+    # White separated names of event to watch
+    watch_event = Unicode("", sync=True)
+    
+    # White separated names of event to unwatch
+    unwatch_event = Unicode("", sync=True)
+    
+    # Event captured (sent from js, jason encoded).
+    event = Unicode("{}", sync=True)
+    
+    # Buffered commands, list of dictionary (or None)
+    buffered_commands = None
+    
+    # use this style dictionary if not provided
+    default_style = {}
+    
+    # Set True to enable localized event callbacks
+    # If set False then event callbacks attached to descendent elements to
+    # the SVG canvas will not fire -- only the global default callback will fire.
+    local_events = True
+
+
     def __init__(self, *pargs, **kwargs):
         super(SVGCanvasWidget, self).__init__(*pargs, **kwargs)
         self.on_trait_change(self.handle_event_change, "event")
@@ -173,69 +297,3 @@ class SVGCanvasWidget(widgets.DOMWidget):
     def get_style(self):
         "Get the current SVG style."
         return json.loads(self.style)
-    
-    def set_style(self, style_dict):
-        "Set the current SVG style."
-        self.style = json.dumps(style_dict)
-        
-    def add_style(self, key, value):
-        "Add an entry to the SVG style."
-        style_dict = self.get_style()
-        style_dict[key] = value
-        self.set_style(style_dict)
-
-    def set_view_box(self, minx, miny, width, height):
-        "Change the SVG view box."
-        assert width != 0
-        assert height != 0
-        self.view_minx = minx
-        self.view_miny = miny
-        self.view_width = width
-        self.view_height = height
-        self.viewBox = "%s %s %s %s" % (minx, miny, width, height)
-        
-    def text(self, name, x, y, text, fill="black", event_cb= None, style_dict=None, **other_attributes):
-        "Add command to create a text element to the command buffer."
-        tag = "text"
-        atts = other_attributes.copy()
-        atts["fill"] = fill
-        atts["x"] = x
-        atts["y"] = y
-        self.add_element(name, tag, atts, style_dict, text=text, event_callback=event_cb)
-
-    def line(self, name, x1, y1, x2, y2, color="black", width=None, 
-             event_cb=None, style_dict=None, **other_attributes):
-        "Add a command to create a line element ot the command buffer."
-        tag = "line"
-        atts = other_attributes.copy()
-        atts["x1"] = x1
-        atts["y1"] = y1
-        atts["x2"] = x2
-        atts["y2"] = y2
-        if width:
-            atts["stroke-width"] = width
-        atts["stroke"] = color
-        self.add_element(name, tag, atts, style_dict, event_callback=event_cb)
-        
-    def circle(self, name, cx, cy, r, fill="black", event_cb=None, style_dict=None,
-              **other_attributes):
-        "Add a command to create a circle element to the command buffer."
-        tag = "circle"
-        atts = other_attributes.copy()
-        atts["cx"] = cx
-        atts["cy"] = cy
-        atts["r"] = r
-        atts["fill"] = fill
-        self.add_element(name, tag, atts, style_dict, event_callback=event_cb)
-
-    def rect(self, name, x, y, width, height, fill="black", event_cb=None, style_dict=None,
-            **other_attributes):
-        "Add a command to create a rectangle element to the command buffer."
-        tag = "rect"
-        atts = other_attributes.copy()
-        atts["x"] = x
-        atts["y"] = y
-        atts["width"] = width
-        atts["height"] = height
-        atts["fill"] = fill
-        self.add_element(name, tag, atts, style_dict, event_callback=event_cb)
