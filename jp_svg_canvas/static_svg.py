@@ -10,8 +10,9 @@ of SVGCanvasWidget.
 from IPython.display import display, HTML
 from jp_svg_canvas import canvas
 import json
+import time
 
-COUNTER = [0]
+COUNTER = [int(time.time()) % 1000000]
 
 # XXX not sure styles are handled consistently
 
@@ -52,7 +53,7 @@ class StaticCanvas(canvas.SVGHelperMixin):
 
     def new_div_name(self):
         COUNTER[0] += 1
-        return "jp_svb_canvas_static_" + str(COUNTER[0])
+        return "jp_svg_canvas_static_" + str(COUNTER[0])
 
     def embedding(self):
         identifier = self.new_div_name()
