@@ -20,6 +20,7 @@ class Cartesian(object):
     other_attributes = {}
 
     def __init__(self, target_canvas, scaling=1.0, x_scaling=None, y_scaling=None,
+        canvas.load_javascipr_support()
         x_offset=0.0, y_offset=0.0):
         self.x_scaling = self.y_scaling = scaling
         if x_scaling is not None:
@@ -363,15 +364,19 @@ class Cartesian(object):
         emit()
 
 
-def doodle(xmin, ymin, xmax, ymax, html_width=500, margin=50, svg=None):
+def doodle(xmin, ymin, xmax, ymax, html_width=500, html_height=None, margin=50, svg=None):
     """
     A utility to get a simple widget target for drawing.
     """
     inner_width = html_width - 2 * margin
     scaling = None
-    x_scaling = inner_width * 1.0 / (ymax - ymin)
+    x_scaling = inner_width * 1.0 / (xmax - xmin)
     x_offset = margin - x_scaling * xmin
-    y_scaling = - x_scaling
+    if html_height is None:
+        y_scaling = - x_scaling
+    else:
+        inner_height = html_height - 2 * margin
+        y_scaling = inner_height * 1.0 / (ymin - ymax)
     y_offset = margin - y_scaling * ymax
     height = 2 * margin + abs((ymax - ymin) * y_scaling)
     width = 2 * margin + abs((xmax - xmin) * x_scaling)
