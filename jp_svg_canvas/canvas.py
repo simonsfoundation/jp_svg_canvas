@@ -16,16 +16,23 @@ import pprint
 # the two interpreters.  It may be possible to remove
 # this approach now or later.
 
-def load_javascript_support(verbose=False):
+JS_LOADED = [False]
+
+def load_javascript_support(verbose=False, force=False):
     """
     Install javascript support required for this module into the notebook.
     """
-    my_dir = os.path.dirname(__file__)
-    js_filename = os.path.join(my_dir, "canvas.js")
-    assert os.path.exists(js_filename)
-    if verbose:
-        print("loading javascript from", repr(js_filename))
-    display(Javascript(js_filename))
+    if (not JS_LOADED[0]) or force:
+        my_dir = os.path.dirname(__file__)
+        js_filename = os.path.join(my_dir, "canvas.js")
+        assert os.path.exists(js_filename)
+        if verbose:
+            print("loading javascript from", repr(js_filename))
+        display(Javascript(js_filename))
+        JS_LOADED[0] = True
+    else:
+        if verbose:
+            print ("canvas.js javascript support already loaded")
 
 
 class SVGHelperMixin(HasTraits):
