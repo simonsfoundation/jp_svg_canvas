@@ -18,10 +18,11 @@ class Cartesian(object):
     rotate = None
     style_dict = {}
     other_attributes = {}
+    buffered = False
 
     def __init__(self, target_canvas, scaling=1.0, x_scaling=None, y_scaling=None,
-        canvas.load_javascipr_support()
         x_offset=0.0, y_offset=0.0):
+        canvas.load_javascript_support()
         self.x_scaling = self.y_scaling = scaling
         if x_scaling is not None:
             self.x_scaling = x_scaling
@@ -30,6 +31,50 @@ class Cartesian(object):
         self.x_offset = x_offset
         self.y_offset = y_offset
         self.target = target_canvas
+        self.prefix_to_names = {}
+        self.prefix_to_count = {}
+
+    def get_prefixed_name(self, prefix):
+        if prefix is None:
+            return None   # unnamed object, do not assign a name.
+        assert "*" not in prefix, "name prefix must not contain '*'"
+        count = self.prefix_to_count.get(prefix, 0) + 1
+        self.prefix_to_count[prefix] = count
+        result = "%s*%s" % (prefix, count)
+        self.prefix_to_names.setdefault(prefix, set()).add(result)
+        return result
+
+    def delete(self, prefixes, strict=False):
+        [prefixes] = unify_shapes(prefixes)
+        p2n = self.prefix_to_names
+        target = self.target
+        for prefix in prefixes:
+            if prefix in p2n:
+                names = list(p2n[prefix])
+                target.delete_names(names)
+                del p2n[prefix]
+            else:
+                if strict:
+                    raise KeyError("no extant objects with this prefix " + repr(prefix))
+        self.check_buffer()
+
+    def change(self, prefixes, **attribute_dict):
+        [prefixes] = unify_shapes(prefixes)
+        p2n = self.prefix_to_names
+        target = self.target
+        for prefix in prefixes:
+            if prefix in p2n:
+                names = list(p2n[prefix])
+                for name in names:
+                    target.change_element(name, attribute_dict)
+        self.check_buffer()
+
+    def flush(self):
+        self.target.send_commands()
+
+    def check_buffer(self):
+        if not self.buffered:
+            self.flush()
 
     def show(self):
         display(self.target)
@@ -70,6 +115,8 @@ class Cartesian(object):
         rotate=None, style_dicts=None, other_attributes=None, update=False):
         (fills, event_cbs, style_dicts, other_attributes) = self.override_defaults(
             fills, event_cbs, style_dicts, other_attributes)
+        if rotate is None:
+            rotate = self.rotate
         (names, xs, ys, texts, fills, event_cbs, style_dicts, other_attributes) = unify_shapes(
             names, xs, ys, texts, fills, event_cbs, style_dicts, other_attributes)
         if update:
@@ -78,16 +125,18 @@ class Cartesian(object):
         (xs, ys) = self.project(xs, ys)
         target = self.target
         for (i, name) in enumerate(names):
+            name = self.get_prefixed_name(name)
             sd = style_dicts[i].copy()
             oa = other_attributes[i].copy()
             x = xs[i]
             y = ys[i]
             if rotate:
-                rotation = "rotate(%s %s %s)" % (rotate, x, y)
+                # Note: rotattion is inverted because Y is inverted.
+                rotation = "rotate(%s %s %s)" % (-rotate, x, y)
                 oa["transform"] = rotation
             target.text(name, x, y, texts[i], fills[i], event_cbs[i], 
                 sd, **oa)
-        target.send_commands()
+        self.check_buffer()
 
     text = texts # alias
 
@@ -115,11 +164,27 @@ class Cartesian(object):
         (x2s, y2s) = self.project(x2s, y2s)
         target = self.target
         for (i, name) in enumerate(names):
+            name = self.get_prefixed_name(name)
             target.line(name, x1s[i], y1s[i], x2s[i], y2s[i], colors[i], widths[i],
                 event_cbs[i], style_dicts[i], **other_attributes[i])
-        target.send_commands()
+        self.check_buffer()
 
     line = lines # alias
+
+    def change_circles(self, prefix, cx=None, cy=None, r=None, **other_attributes):
+        atts = other_attributes.copy()
+        # refactor???
+        if cx is not None:
+            (cx, _) = self.project(cx, 0)
+            atts["cx"] = cx
+        if cy is not None:
+            (_, cy) = self.project(0, cy)
+            atts["cy"] = cy
+        if r is not None:
+            (r, _) = self.scale(r, 0)
+            r = abs(r)
+            atts["r"] = r
+        self.change(prefix, **atts)
 
     def circles(self, names, cxs, cys, rs, fills=None, event_cbs=None, style_dicts=None,
               other_attributes=None, update=True):
@@ -135,11 +200,14 @@ class Cartesian(object):
         (rs, _) = map(np.abs, self.scale(rs, 0))
         target = self.target
         for (i, name) in enumerate(names):
+            name = self.get_prefixed_name(name)
             target.circle(name, cxs[i], cys[i], rs[i], fills[i], event_cbs[i], style_dicts[i],
                 **other_attributes[i])
-        target.send_commands()
+        self.check_buffer()
 
     circle = circles # alias
+
+    # XXXX change_rects would require storing additianal state... deferred for now
 
     def rects(self, names, xs, ys, widths, heights, fills=None, event_cbs=None, style_dicts=None,
             other_attributes=None, update=True):
@@ -154,12 +222,13 @@ class Cartesian(object):
             ys = ys - heights
         target = self.target
         for (i, name) in enumerate(names):
+            name = self.get_prefixed_name(name)
             if update:
                 self.update_extrema(xs_w[i] + widths_w[i], ys_w[i] + heights_w[i])
                 self.update_extrema(xs_w[i], ys_w[i])
             target.rect(name, xs[i], ys[i], widths[i], heights[i], fills[i], event_cbs[i], style_dicts[i],
                 **other_attributes[i])
-        target.send_commands()
+        self.check_buffer()
 
     rect = rects # alias
 
@@ -180,7 +249,7 @@ class Cartesian(object):
     def fit(self):
         "fit the target to the drawn elements"
         self.target.fit()
-        self.target.send_commands()
+        self.check_buffer()
 
     # axis defaults
     tick_size = 5
@@ -189,6 +258,7 @@ class Cartesian(object):
     max_num_tick = 5
     text_options = {}
     line_options = {}
+    axis_name = None
 
     def axis_defaults(self, tick_size, label_offset, label_fmt, max_num_tick, text_options, line_options, color):
         if tick_size is None:
@@ -225,12 +295,13 @@ class Cartesian(object):
             text_options["text-anchor"] = "start"
         ticks = tick(minimum, maximum, max_num_tick)
         (tick_shift, _) = self.rscale(tick_size, 0)
-        self.lines(None, x, ticks, x + label_align * tick_shift, ticks, color, other_attributes=line_options)
-        self.lines(None, [x], minimum, x, maximum, color, other_attributes=line_options)
+        name = self.axis_name
+        self.lines(name, x, ticks, x + label_align * tick_shift, ticks, color, other_attributes=line_options)
+        self.lines(name, [x], minimum, x, maximum, color, other_attributes=line_options)
         if label_fmt:
             (label_shift, _) = self.rscale(label_offset, 0)
             labels = [label_fmt % t for t in ticks]
-            self.texts(None, x + label_align * label_shift, ticks, labels, color, other_attributes=text_options)
+            self.texts(name, x + label_align * label_shift, ticks, labels, color, other_attributes=text_options)
         return ticks
 
     def top_axis(self, y, minimum, maximum, 
@@ -251,12 +322,13 @@ class Cartesian(object):
             text_options["text-anchor"] = "start"
         ticks = tick(minimum, maximum, max_num_tick)
         (_, tick_shift) = self.rscale(0, tick_size)
-        self.lines(None, ticks, y, ticks, y + label_align * tick_shift, color, other_attributes=line_options)
-        self.lines(None, minimum, [y], maximum, y, color, other_attributes=line_options)
+        name = self.axis_name
+        self.lines(name, ticks, y, ticks, y + label_align * tick_shift, color, other_attributes=line_options)
+        self.lines(name, minimum, [y], maximum, y, color, other_attributes=line_options)
         if label_fmt:
             (_, label_shift) = self.rscale(0, label_offset)
             labels = [label_fmt % t for t in ticks]
-            self.texts(None, ticks, y + label_align * label_shift, labels, color, rotate=90, other_attributes=text_options)
+            self.texts(name, ticks, y + label_align * label_shift, labels, color, rotate=-90, other_attributes=text_options)
         return ticks
 
     def axes(self, x0=0, y0=0):
@@ -268,7 +340,7 @@ class Cartesian(object):
 
     def empty(self):
         self.target.empty()
-        self.target.send_commands()
+        self.check_buffer()
 
     def default_extrema(self, min_x, min_y, max_x, max_y):
         if min_x is None:
@@ -390,13 +462,13 @@ def doodle(xmin, ymin, xmax, ymax, html_width=500, html_height=None, margin=50, 
     (C.min_x, C.min_y, C.max_x, C.max_y) = (xmin, ymin, xmax, ymax)
     return C
 
-def sdoodle(xmin, ymin, xmax, ymax, html_width=500, margin=50):
+def sdoodle(xmin, ymin, xmax, ymax, html_width=500, html_height=None, margin=50):
     """
     A static doodle (cannot be used as a widget but will show in nbviewer)
     """
     from jp_svg_canvas import static_svg
     svg = static_svg.StaticCanvas()
-    return doodle(xmin, ymin, xmax, ymax, html_width, margin, svg=svg)
+    return doodle(xmin, ymin, xmax, ymax, html_width, html_height, margin, svg=svg)
 
 # utilities
 def unify_shapes(*args):

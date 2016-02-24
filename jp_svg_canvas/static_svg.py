@@ -62,6 +62,8 @@ class StaticCanvas(canvas.SVGHelperMixin):
             viewBox=self.viewBox,
             identifier=identifier,
             commands=commands_string,
+            width = self.width,
+            height = self.height
             )
 
     def embed(self):
@@ -73,6 +75,8 @@ JS_TEMPLATE = """
 <script>
 (function () {{
     var $div = $("#{identifier}");
+    $div.width({width});
+    $div.height({height});
     var svg_elt = function(kind) {{
             return document.createElementNS('http://www.w3.org/2000/svg', kind);
         }};
