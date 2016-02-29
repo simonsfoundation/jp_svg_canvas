@@ -1,6 +1,9 @@
 """
-Higher level conveniences for drawing SVG 2d figures.
+Higher level conveniences for drawing SVG 2d figures supporting scaling and translations.
 """
+
+# xxxx Object level event callbacks don't automatically get
+# translations of cartesian coordinates
 
 import numpy as np
 import math
@@ -19,6 +22,7 @@ class Cartesian(object):
     style_dict = {}
     other_attributes = {}
     buffered = False
+    events_callback = None
 
     def __init__(self, target_canvas, scaling=1.0, x_scaling=None, y_scaling=None,
         x_offset=0.0, y_offset=0.0):
@@ -33,6 +37,33 @@ class Cartesian(object):
         self.target = target_canvas
         self.prefix_to_names = {}
         self.prefix_to_count = {}
+
+    def enable_events(self, events_string, callback):
+        self.target.watch_event = events_string
+        self.events_callback = callback
+        self.target.default_event_callback = self.handle_event
+
+    def disable_events(self):
+        self.enable_events("", None)
+
+    def handle_event(self, info):
+        """
+        Add the cartesian coordinates info["point"] = (x, y)
+        to an event info dictionary from the SVG canvas and
+        dispatch the event to the external callback.
+        """
+        callback = self.events_callback
+        if callback is None:
+            raise ValueError("got event with no registered callback: " + str(info))
+        cx = info.get("svgX")
+        cy = info.get("svgY")
+        point = self.rproject(cx, cy)
+        info = info.copy()  # for safety
+        info["point"] = point
+        # get the cartesian group name
+        name = info.get("name", "")
+        info["group_name"] = name.split("*")[0]
+        callback(info)
 
     def get_prefixed_name(self, prefix):
         if prefix is None:
@@ -237,6 +268,11 @@ class Cartesian(object):
         (sx, sy) = self.scale(x, y)
         return (sx + self.x_offset, sy + self.y_offset)
 
+    def rproject(self, cx, cy):
+        "Convert canvas coordinates to world space coordinates."
+        (sx, sy) = (cx - self.x_offset, cy - self.y_offset)
+        return self.rscale(sx, sy)
+
     def scale(self, x, y):
         "Scale x and y values."
         # right now only scaling?
@@ -353,7 +389,7 @@ class Cartesian(object):
             max_y = self.max_y
         return (min_x, min_y, max_x, max_y)
 
-    def plot_y(self, f_y, min_x=None, max_x=None, dx=None, npoints=200, min_y=None, max_y=None):
+    def plot_y(self, f_y, min_x=None, max_x=None, dx=None, npoints=200, min_y=None, max_y=None, name=None):
         """
         Plot y = f_y(x) between min_x and max_x, skipping exceptions.
         """
@@ -364,7 +400,7 @@ class Cartesian(object):
             dx = (max_x - min_x) * 1.0 / npoints
         def emit():
             if xs:
-                self.sequence(None, xs, ys)
+                self.sequence(name, xs, ys)
             xs[:] = []
             ys[:] = []
         x = min_x
@@ -382,7 +418,7 @@ class Cartesian(object):
             x += dx
         emit()
 
-    def plot_x(self, f_x, min_y=None, max_y=None, dy=None, npoints=200, min_x=None, max_x=None):
+    def plot_x(self, f_x, min_y=None, max_y=None, dy=None, npoints=200, min_x=None, max_x=None, name=None):
         """
         Plot y = f_y(x) between min_x and max_x, skipping exceptions.
         """
@@ -394,7 +430,7 @@ class Cartesian(object):
             dy = (max_y - min_y) * 1.0 / npoints
         def emit():
             if xs:
-                self.sequence(None, xs, ys)
+                self.sequence(name, xs, ys)
             xs[:] = []
             ys[:] = []
         y = min_y
@@ -412,7 +448,7 @@ class Cartesian(object):
             y += dy
         emit()
 
-    def plot_t(self, f_xy, t0, dt, npoints):
+    def plot_t(self, f_xy, t0, dt, npoints, name=None):
         """
         Parametric plot (x,y) = f_xy(t) for t from t0 incrementing dt npoints times.
         """
@@ -420,7 +456,7 @@ class Cartesian(object):
         ys = []
         def emit():
             if xs:
-                self.sequence(None, xs, ys)
+                self.sequence(name, xs, ys)
             xs[:] = []
             ys[:] = []
         t = t0
