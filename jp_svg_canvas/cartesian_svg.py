@@ -77,6 +77,8 @@ class Cartesian(object):
 
     def delete(self, prefixes, strict=False):
         [prefixes] = unify_shapes(prefixes)
+        if len(prefixes) == 0:
+            return
         p2n = self.prefix_to_names
         target = self.target
         for prefix in prefixes:
@@ -150,6 +152,8 @@ class Cartesian(object):
             rotate = self.rotate
         (names, xs, ys, texts, fills, event_cbs, style_dicts, other_attributes) = unify_shapes(
             names, xs, ys, texts, fills, event_cbs, style_dicts, other_attributes)
+        if len(names) == 0:
+            return
         if update:
             self.update_extrema(xs.max(), ys.max())
             self.update_extrema(xs.min(), ys.min())
@@ -174,6 +178,8 @@ class Cartesian(object):
     def sequence(self, names, xs, ys, colors=None, widths=None,
         event_cbs=None, style_dicts=None, other_attributes=None, update=True):
         (xs, ys) = unify_shapes(xs, ys)
+        if len(xs) == 0:
+            return
         x1s = xs[:-1]
         y1s = ys[:-1]
         x2s = xs[1:]
@@ -187,6 +193,8 @@ class Cartesian(object):
             colors, event_cbs, style_dicts, other_attributes)
         (names, x1s, y1s, x2s, y2s, colors, widths, event_cbs, style_dicts, other_attributes) = unify_shapes(
             names, x1s, y1s, x2s, y2s, colors, widths, event_cbs, style_dicts, other_attributes)
+        if len(names) == 0:
+            return
         if update:
             for (xs, ys) in ((x1s, y1s), (x2s, y2s)):
                 self.update_extrema(xs.max(), ys.max())
@@ -223,6 +231,8 @@ class Cartesian(object):
             fills, event_cbs, style_dicts, other_attributes)
         (names, cxs, cys, rs, fills, event_cbs, style_dicts, other_attributes) = unify_shapes(
             names, cxs, cys, rs, fills, event_cbs, style_dicts, other_attributes)
+        if len(names) == 0:
+            return
         if update:
             self.update_extrema(cxs.max(), cys.max())
             self.update_extrema(cxs.min(), cys.min())
@@ -246,6 +256,8 @@ class Cartesian(object):
             fills, event_cbs, style_dicts, other_attributes)
         (names, xs_w, ys_w, widths_w, heights_w, fills, event_cbs, style_dicts, other_attributes) = unify_shapes(
             names, xs, ys, widths, heights, fills, event_cbs, style_dicts, other_attributes)
+        if not names:
+            return
         (xs, ys) = self.project(xs_w, ys_w)
         (widths, heights) = map(np.abs, self.scale(widths_w, heights_w))
         if self.y_scaling < 0:
