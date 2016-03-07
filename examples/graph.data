@@ -10,7 +10,7 @@
                         "id": "3", 
                         "isEdge": true, 
                         "isNode": false, 
-                        "label": "K", 
+                        "label": "d(K)", 
                         "shiftKey": false, 
                         "source": "1", 
                         "target": "2", 
@@ -31,7 +31,7 @@
                         "id": "8", 
                         "isEdge": true, 
                         "isNode": false, 
-                        "label": "J", 
+                        "label": "d(J)", 
                         "shiftKey": false, 
                         "source": "1", 
                         "target": "5", 
@@ -52,7 +52,7 @@
                         "id": "9", 
                         "isEdge": true, 
                         "isNode": false, 
-                        "label": "b * J", 
+                        "label": "b * d(J)", 
                         "shiftKey": false, 
                         "source": "1", 
                         "target": "6", 
@@ -65,7 +65,7 @@
                     "position": {}, 
                     "removed": false, 
                     "selectable": true, 
-                    "selected": true
+                    "selected": false
                 }, 
                 {
                     "classes": "", 
@@ -73,7 +73,7 @@
                         "id": "10", 
                         "isEdge": true, 
                         "isNode": false, 
-                        "label": "a * K", 
+                        "label": "a * d(K)", 
                         "shiftKey": false, 
                         "source": "1", 
                         "target": "7", 
@@ -118,7 +118,7 @@
                         "id": "2", 
                         "isEdge": false, 
                         "isNode": true, 
-                        "label": "Bob", 
+                        "label": "B:Bob", 
                         "shiftKey": false, 
                         "type": "click"
                     }, 
@@ -127,8 +127,8 @@
                     "group": "nodes", 
                     "locked": false, 
                     "position": {
-                        "x": 361.9600366249637, 
-                        "y": 474.49184560740713
+                        "x": 318.48253973430957, 
+                        "y": 460.4352112743385
                     }, 
                     "removed": false, 
                     "selectable": true, 
@@ -140,7 +140,7 @@
                         "id": "5", 
                         "isEdge": false, 
                         "isNode": true, 
-                        "label": "Jack", 
+                        "label": "J:Jack", 
                         "shiftKey": false, 
                         "type": "click"
                     }, 
@@ -162,8 +162,8 @@
                         "id": "6", 
                         "isEdge": false, 
                         "isNode": true, 
-                        "label": "Janet", 
-                        "shiftKey": true, 
+                        "label": "N:Janet", 
+                        "shiftKey": false, 
                         "type": "click"
                     }, 
                     "grabbable": true, 
@@ -171,8 +171,8 @@
                     "group": "nodes", 
                     "locked": false, 
                     "position": {
-                        "x": 310.7496164620254, 
-                        "y": 354.189176748297
+                        "x": 306.17303784195656, 
+                        "y": 360.4002477326761
                     }, 
                     "removed": false, 
                     "selectable": true, 
@@ -184,8 +184,8 @@
                         "id": "7", 
                         "isEdge": false, 
                         "isNode": true, 
-                        "label": "Kim", 
-                        "shiftKey": true, 
+                        "label": "K:Kim", 
+                        "shiftKey": false, 
                         "type": "click"
                     }, 
                     "grabbable": true, 
@@ -193,8 +193,8 @@
                     "group": "nodes", 
                     "locked": false, 
                     "position": {
-                        "x": 438.5741396837063, 
-                        "y": 325.7340858266302
+                        "x": 477.80195642715364, 
+                        "y": 340.1176186325609
                     }, 
                     "removed": false, 
                     "selectable": true, 
@@ -203,14 +203,14 @@
             ]
         }, 
         "layout": {
-            "name": "cose", 
+            "name": "preset", 
             "padding": 5
         }, 
         "maxZoom": 1e+50, 
         "minZoom": 1e-50, 
         "pan": {
-            "x": -917.622270783156, 
-            "y": -1020.5952573054503
+            "x": -809.9122015289913, 
+            "y": -937.2682095787168
         }, 
         "panningEnabled": true, 
         "renderer": {
@@ -375,7 +375,7 @@
         ], 
         "userPanningEnabled": true, 
         "userZoomingEnabled": true, 
-        "zoom": 3.3005560190704895, 
+        "zoom": 3.0590537522087518, 
         "zoomingEnabled": true
     }
 }

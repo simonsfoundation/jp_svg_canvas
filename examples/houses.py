@@ -1,5 +1,7 @@
 """
 Interactive widget for the house location problem.
+
+This is not polished code.  It is a quick proof of concept for demonstration purposes.
 """
 
 import traitlets
@@ -8,9 +10,11 @@ import ipywidgets as widgets
 from jp_svg_canvas import cartesian_svg
 import threading
 import time
+import jp_svg_canvas.transforms2d as tr
 
 import numpy as np
 import sympy as s
+import math
 
 #ip = get_ipython()
 
@@ -181,9 +185,32 @@ class Locations(traitlets.HasTraits):
             else:
                 if name in "KBJN":
                     self.moving = name
+    def locations1(self):
+        "brute force method to finding circle intersections using sympy."
+        return s.solve([self.KB_Shape, self.JN_Shape], x, y)
+    def locations2(self):
+        "calculate location positions directly"
+        K = self.K
+        B = self.B
+        J = self.J
+        N = self.N
+        (P1x, P1y, r1) = circle_stats1(K[0], K[1], B[0], B[1], self.a)
+        (P2x, P2y, r2) = circle_stats1(J[0], J[1], N[0], N[1], self.b)
+        r = r1/r2
+        xp = distance(P1x, P1y, P2x, P2y)/r2
+        try:
+            cost = (-r*r + xp*xp + 1)/(2*xp)
+            sint = math.sqrt(1 - cost*cost)
+        except ValueError:
+            return []
+        trans = tr.translate(P2x, P2y)
+        rot = tr.direction_rotate(P1x-P2x, P1y-P2y)
+        scl = tr.scale(r2)
+        denormalize = tr.compose(scl, tr.compose(rot, trans))
+        return  [tr.tapply(denormalize, cost, sint), tr.tapply(denormalize, cost, -sint)]
     def draw_locations(self):
         D = self.diagram
-        locations = s.solve([self.KB_Shape, self.JN_Shape], x, y)
+        locations = self.locations2()
         #D.delete(["location"])
         for location in locations:
             try:
