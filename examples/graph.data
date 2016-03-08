@@ -96,7 +96,7 @@
                         "id": "1", 
                         "isEdge": false, 
                         "isNode": true, 
-                        "label": "???", 
+                        "label": "H?", 
                         "shiftKey": false, 
                         "type": "click"
                     }, 
@@ -110,7 +110,7 @@
                     }, 
                     "removed": false, 
                     "selectable": true, 
-                    "selected": false
+                    "selected": true
                 }, 
                 {
                     "classes": "", 
@@ -209,8 +209,8 @@
         "maxZoom": 1e+50, 
         "minZoom": 1e-50, 
         "pan": {
-            "x": -809.9122015289913, 
-            "y": -937.2682095787168
+            "x": -992.837007527791, 
+            "y": -1133.258930157498
         }, 
         "panningEnabled": true, 
         "renderer": {
@@ -375,7 +375,7 @@
         ], 
         "userPanningEnabled": true, 
         "userZoomingEnabled": true, 
-        "zoom": 3.0590537522087518, 
+        "zoom": 3.580672946529161, 
         "zoomingEnabled": true
     }
 }
