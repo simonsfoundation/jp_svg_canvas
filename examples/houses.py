@@ -27,7 +27,7 @@ def distance(x0,y0,x1,y1):
     return np.sqrt(dist2(x0,y0,x1,y1))
 
 def circle_stats1(x_1, y_1, x_2, y_2, ratio):
-    """y
+    """
     Find the center and radius for the circle where 
     distance(x1,y1,x,y) = ratio * distance(x1,y2,x,y)
     """
@@ -114,7 +114,7 @@ class Locations(traitlets.HasTraits):
         if (ty == "click"):
             if moving:
                 self.moving = None
-                self.redraw_in_thread()
+                self.redraw()
             else:
                 if name in "KBJN":
                     self.moving = name
