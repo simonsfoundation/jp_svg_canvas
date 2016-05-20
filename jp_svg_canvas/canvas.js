@@ -1,5 +1,11 @@
 
-require(["widgets/js/widget", "widgets/js/manager"], function(widget, manager){
+// imitating ipywidgets/docs/source/examples/Custom Widget - Hello World.ipynb
+
+//require(["widgets/js/widget", "widgets/js/manager"], function(widget, manager){
+
+require.undef("SVGCanvas");
+
+define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
     
     var svgEventHandlerFactory = function(that) {
         var svgEventHandler = function(e) {
@@ -35,7 +41,7 @@ require(["widgets/js/widget", "widgets/js/manager"], function(widget, manager){
         return pt.matrixTransform(svg.getScreenCTM().inverse());
     }
     
-    var SVGCanvasView = widget.DOMWidgetView.extend({
+    var SVGCanvasView = widgets.DOMWidgetView.extend({
         
         render: function() {
             var that = this;
@@ -196,5 +202,8 @@ require(["widgets/js/widget", "widgets/js/manager"], function(widget, manager){
         
     });
     
-    manager.WidgetManager.register_widget_view('SVGCanvasView', SVGCanvasView);
+    //manager.WidgetManager.register_widget_view('SVGCanvasView', SVGCanvasView);
+    return {
+        SVGCanvasView: SVGCanvasView
+    }
 });
