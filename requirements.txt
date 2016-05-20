@@ -1,2 +1,3 @@
-ipywidgets>=4.0.2
+ipywidgets>=5.1.4
+ipython>=4.2.0
 traitlets>=4.0.0
