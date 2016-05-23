@@ -44,7 +44,8 @@ class SVGHelperMixin(HasTraits):
     # in the widget protobol, so they are duplicated...
     
     # The javascript view name.
-    _view_name = Unicode('SVGCanvasView', sync=True)
+    _view_name = Unicode('SVGCanvasView').tag(sync=True)
+    _view_module = Unicode("SVGCanvas").tag(sync=True)
     
     # SVG viewBox
     viewBox = Unicode("0 0 500 500", sync=True)
@@ -164,7 +165,8 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
     """
 
     # The javascript view name.
-    _view_name = Unicode('SVGCanvasView', sync=True)
+    _view_name = Unicode('SVGCanvasView').tag(sync=True)
+    _view_module = Unicode("SVGCanvas").tag(sync=True)
     
     # SVG viewBox
     viewBox = Unicode("0 0 500 500", sync=True)
