@@ -62,8 +62,8 @@ class StaticCanvas(canvas.SVGHelperMixin):
             viewBox=self.viewBox,
             identifier=identifier,
             commands=commands_string,
-            width = self.width,
-            height = self.height
+            width = self.svg_width,
+            height = self.svg_height
             )
 
     def embed(self):
