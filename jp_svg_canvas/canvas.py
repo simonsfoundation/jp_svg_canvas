@@ -179,10 +179,10 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
     boundingBox = Dict({}, sync=True)
     
     # Canvas width
-    width = Float(500, sync=True)
+    svg_width = Float(500, sync=True)
     
     # Canvas height
-    height = Float(500, sync=True)
+    svg_height = Float(500, sync=True)
     
     # SVG styling, JSON encoded dictionary
     style = Unicode("{}", sync=True)
