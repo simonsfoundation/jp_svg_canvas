@@ -9,7 +9,6 @@ define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
     
     var svgEventHandlerFactory = function(that) {
         var svgEventHandler = function(e) {
-            //debugger;
             var target = e.target;
             var info = {};
             for (var attr in e) {
@@ -59,15 +58,14 @@ define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
             that.start_watch_event();
             that.model.on("change:commands", that.commands_changed, that);
             that.model.on("change:viewBox", that.svg_parameters_changed, that);
-            that.model.on("change:width", that.svg_parameters_changed, that);
-            that.model.on("change:height", that.svg_parameters_changed, that);
+            that.model.on("change:svg_width", that.svg_parameters_changed, that);
+            that.model.on("change:svg_height", that.svg_parameters_changed, that);
             that.model.on("change:style", that.svg_parameters_changed, that);
             that.model.on("change:watch_event", that.start_watch_event, that);
             that.model.on("change:unwatch_event", that.stop_watch_event, that);
         },
         
         start_watch_event: function() {
-            //debugger;
             var that = this;
             var event_types = that.model.get("watch_event");
             if (event_types != "") {
@@ -78,7 +76,6 @@ define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
         },
         
         stop_watch_event: function() {
-            //debugger;
             var that = this;
             var event_types = that.model.get("unwatch_event");
             if (event_types != "") {
@@ -117,7 +114,6 @@ define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
         },
         
         do_add_element: function (that, info) {
-            //debugger;
             var tag = info.tag;
             var name = info.name;
             var element = that.svg_elt(tag);
@@ -182,10 +178,9 @@ define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
             var that = this;
             var style_additions = that.get_JSON("style");
             var svg = that.$svg[0];
-            //debugger;
             svg.setAttribute("viewBox", that.model.get("viewBox"));
-            svg.setAttribute("width", that.model.get("width"));
-            svg.setAttribute("height", that.model.get("height"));
+            svg.setAttribute("width", that.model.get("svg_width"));
+            svg.setAttribute("height", that.model.get("svg_height"));
             for (var style_attr in style_additions) {
                 svg.style[style_attr] = style_additions[style_attr];
             }

@@ -256,7 +256,7 @@ class Cartesian(object):
             fills, event_cbs, style_dicts, other_attributes)
         (names, xs_w, ys_w, widths_w, heights_w, fills, event_cbs, style_dicts, other_attributes) = unify_shapes(
             names, xs, ys, widths, heights, fills, event_cbs, style_dicts, other_attributes)
-        if not names:
+        if len(names) == 0:
             return
         (xs, ys) = self.project(xs_w, ys_w)
         (widths, heights) = map(np.abs, self.scale(widths_w, heights_w))
@@ -489,6 +489,7 @@ def doodle(xmin, ymin, xmax, ymax, html_width=500, html_height=None, margin=50, 
     A utility to get a simple widget target for drawing.
     """
     inner_width = html_width - 2 * margin
+    assert (inner_width > 0), "Margin %s too wide for width %s" % (margin, html_width)
     scaling = None
     x_scaling = inner_width * 1.0 / (xmax - xmin)
     x_offset = margin - x_scaling * xmin
@@ -503,8 +504,8 @@ def doodle(xmin, ymin, xmax, ymax, html_width=500, html_height=None, margin=50, 
     viewBox = "%s %s %s %s" % (0, 0, width, height)
     if svg is None:
         svg = canvas.SVGCanvasWidget()
-    svg.width = width
-    svg.height = height
+    svg.svg_width = width
+    svg.svg_height = height
     svg.viewBox = viewBox
     C = Cartesian(svg, scaling, x_scaling, y_scaling, x_offset, y_offset)
     (C.min_x, C.min_y, C.max_x, C.max_y) = (xmin, ymin, xmax, ymax)
