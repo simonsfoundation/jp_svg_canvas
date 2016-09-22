@@ -44,6 +44,7 @@ class FakeCanvasWidget(object):
         self.canvas_commands = []
         self.font = "Arial"  # default
         self.font_size = 10
+        self.font_weight = "normal"
         self.filename = filename
         self.format = format
 
@@ -91,14 +92,21 @@ class FakeCanvasWidget(object):
         style_dict = style_dict.copy()
         style_dict.update(other_attributes)
         f = self.font = style_dict.get("font", self.font)
+        w = self.font_weight = style_dict.get("font-weight", self.font_weight)
         s = self.font_size = style_dict.get("font-size", self.font_size)
-        self._assign("ctx.font", "%spx %s" % (s, f))
+        self._assign("ctx.font", "%s %spx %s" % (w, s, f))
         self._assign("ctx.fillStyle", fill)
         ta = style_dict.get("text-anchor", "start")
         if ta == "middle":
             ta = "center"
         self._assign("ctx.textAlign", ta)
         self._add("ctx.fillText", text, x, y)
+        stroke = style_dict.get("stroke")
+        stroke_width = style_dict.get("stroke-width")
+        if stroke and stroke_width:
+            self._assign("ctx.lineWidth", stroke_width)
+            self._assign("ctx.strokeStyle", stroke)
+            self._add("ctx.strokeText", text, x, y)
 
     def line(self, name, x1, y1, x2, y2, color="black", width=1, 
              event_cb=None, style_dict=None, **other_attributes):
