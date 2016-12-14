@@ -497,7 +497,7 @@ def doodle(xmin, ymin, xmax, ymax, html_width=500, html_height=None, margin=50, 
         y_scaling = - x_scaling
     else:
         inner_height = html_height - 2 * margin
-        y_scaling = inner_height * 1.0 / (ymin - ymax)
+        y_scaling = inner_height * 1.0 / (ymax - ymin)
     y_offset = margin - y_scaling * ymax
     height = 2 * margin + abs((ymax - ymin) * y_scaling)
     width = 2 * margin + abs((xmax - xmin) * x_scaling)
