@@ -60,6 +60,8 @@ class FakeCanvasWidget(object):
         self.canvas_commands.append(self._assignment(lhs, rhs))
 
     def _assignment(self, lhs, rhs):
+        if type(rhs) is unicode:
+            rhs = str(rhs)
         return "%s = %s;" % (lhs, repr(rhs))
 
     def set_event_callback(self, *args):
