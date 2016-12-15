@@ -45,6 +45,7 @@ class FakeCanvasWidget(object):
         self.font = "Arial"  # default
         self.font_size = 10
         self.font_weight = "normal"
+        self.font_style = ""
         self.filename = filename
         self.format = format
 
@@ -94,9 +95,10 @@ class FakeCanvasWidget(object):
         style_dict = style_dict.copy()
         style_dict.update(other_attributes)
         f = self.font = style_dict.get("font", self.font)
+        fs = self.font_style = style_dict.get("font-style", self.font_style)
         w = self.font_weight = style_dict.get("font-weight", self.font_weight)
         s = self.font_size = style_dict.get("font-size", self.font_size)
-        self._assign("ctx.font", "%s %spx %s" % (w, s, f))
+        self._assign("ctx.font", "%s %s %spx %s" % (fs, w, s, f))
         self._assign("ctx.fillStyle", fill)
         ta = style_dict.get("text-anchor", "start")
         if ta == "middle":
