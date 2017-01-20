@@ -187,6 +187,19 @@ class Cartesian(object):
         return self.lines(names, x1s, y1s, x2s, y2s, colors, widths,
             event_cbs, style_dicts, other_attributes, update)
 
+    def polygon(self, name, points, fill=None, stroke=None, stroke_width=None, style_dict=None, 
+            event_callback=None, **other_attributes):
+        npoints = len(points)
+        points = np.array(points)
+        xs = points[:,0]
+        ys = points[:,1]
+        (xs, ys) = self.project(xs, ys)
+        rs = (npoints, 1)
+        points = np.hstack([xs.reshape(rs), ys.reshape(rs)])
+        #print "points", points
+        target = self.target
+        target.polygon(name, points, fill, stroke, stroke_width, style_dict, event_callback, **other_attributes)
+
     def lines(self, names, x1s, y1s, x2s, y2s, colors=None, widths=None,
         event_cbs=None, style_dicts=None, other_attributes=None, update=True):
         (colors, event_cbs, style_dicts, other_attributes) = self.override_defaults(
