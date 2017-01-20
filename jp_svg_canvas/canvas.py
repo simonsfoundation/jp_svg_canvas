@@ -159,6 +159,24 @@ class SVGHelperMixin(HasTraits):
         atts["fill"] = fill
         self.add_element(name, tag, atts, style_dict, event_callback=event_cb)
 
+    def polygon(self, name, points, fill=None, stroke=None, stroke_width=None, style_dict=None, 
+            event_callback=None, **other_attributes):
+        if style_dict is None:
+            style_dict = {}
+        style_dict = style_dict.copy()
+        if fill is not None:
+            style_dict["fill"] = fill
+        if stroke is not None:
+            style_dict["stroke"] = stroke
+        if stroke_width is not None:
+            style_dict["fill"] = fill
+        points_fmt = " ".join("%s,%s" % tuple(pair) for pair in points)
+        tag = "polygon"
+        atts = other_attributes.copy()
+        atts["points"] = points_fmt
+        self.add_element(name, tag, atts, style_dict, event_callback=event_callback)
+
+
 class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
     """
     Jupyter notebook widget which presents an SVG canvas.
