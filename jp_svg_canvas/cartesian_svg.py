@@ -10,6 +10,10 @@ import math
 from jp_svg_canvas import canvas
 from IPython.display import display
 
+def parameterized_points(f, min_t, max_t, npoints):
+    t_values = np.linspace(min_t, max_t, npoints)
+    return np.array([f(t) for t in t_values], dtype=np.float)
+
 class Cartesian(object):
 
     # extrema in world coordinates
@@ -186,6 +190,18 @@ class Cartesian(object):
         y2s = ys[1:]
         return self.lines(names, x1s, y1s, x2s, y2s, colors, widths,
             event_cbs, style_dicts, other_attributes, update)
+
+    def parameterized_curve(self, name, f, min_t, max_t, npoints, color=None, width=None, style_dict=None):
+        points = parameterized_points(f, min_t, max_t, npoints)
+        xs = points[:,0]
+        ys = points[:,1]
+        return self.sequence(name, xs, ys, color, width, style_dicts=style_dict)
+
+    def parameterized_polygon(self, name, f, min_t, max_t, npoints, fill=None, stroke=None, stroke_width=None, style_dict=None, 
+            event_callback=None, **other_attributes):
+        points = parameterized_points(f, min_t, max_t, npoints)
+        return self.polygon(name, points, fill, stroke, stroke_width, style_dict, 
+            event_callback, **other_attributes)
 
     def polygon(self, name, points, fill=None, stroke=None, stroke_width=None, style_dict=None, 
             event_callback=None, **other_attributes):
