@@ -100,7 +100,7 @@ class SVGHelperMixin(HasTraits):
     # now long to sleep in wait loop
     wait_sleep = 0.01
 
-    def await_pending_commands(self, verbose=False, strict=False):
+    def await_pending_commands(self, verbose=False, strict=True:
         "Wait for javascript side to execute commands."
         if self.command_pending:
             ip = IPython.get_ipython()
@@ -111,8 +111,9 @@ class SVGHelperMixin(HasTraits):
                 ip.kernel.do_one_iteration()
                 if not self.command_pending:
                     break
-        if strict:
-            assert not self.command_pending, "timeout awaiting pending commands."
+        if strict and self.command_pending:
+            self.command_pending = False
+            raise RuntimeError("timeout awaiting pending commands.")
 
 
     def get_style(self):
