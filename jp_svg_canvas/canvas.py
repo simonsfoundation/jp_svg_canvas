@@ -100,7 +100,7 @@ class SVGHelperMixin(HasTraits):
     # now long to sleep in wait loop
     wait_sleep = 0.01
 
-    def await_pending_commands(self, verbose=False, strict=True:
+    def await_pending_commands(self, verbose=False, strict=True):
         "Wait for javascript side to execute commands."
         if self.command_pending:
             ip = IPython.get_ipython()
