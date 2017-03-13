@@ -95,6 +95,8 @@ define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
                 var method = that["do_"+indicator];
                 method(that, command_dict);
             }
+            that.model.set("command_pending", false);
+            that.touch();
         },
 
         do_fit: function(that, info) {

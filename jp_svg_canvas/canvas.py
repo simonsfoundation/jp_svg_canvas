@@ -3,10 +3,12 @@ from __future__ import print_function # For py 2.7 compat
 from IPython.display import display, Javascript
 #from IPython.html import widgets
 import ipywidgets as widgets
-from traitlets import Unicode, Float, List, Dict, HasTraits
+from traitlets import Unicode, Float, List, Dict, HasTraits, Bool
 import json
 import os
 import pprint
+import IPython
+import time
 
 # XXXX I initially had difficulties directly passing
 # complex structures like lists and dicts from the
@@ -68,6 +70,9 @@ class SVGHelperMixin(HasTraits):
     
     # JSON encoded sequence of dictionaries describing actions.
     commands = Unicode("[]", sync=True)
+
+    # flag that indicates a command is pending for execution
+    command_pending = Bool(False, sync=True)
     
     # White separated names of event to watch
     watch_event = Unicode("", sync=True)
@@ -88,6 +93,27 @@ class SVGHelperMixin(HasTraits):
     # If set False then event callbacks attached to descendent elements to
     # the SVG canvas will not fire -- only the global default callback will fire.
     local_events = True
+
+    # number of times to iterate awaiting pending comments.
+    wait_iterations = 100
+
+    # now long to sleep in wait loop
+    wait_sleep = 0.01
+
+    def await_pending_commands(self, verbose=False, strict=False):
+        "Wait for javascript side to execute commands."
+        if self.command_pending:
+            ip = IPython.get_ipython()
+            for i in range(self.wait_iterations):
+                if verbose:
+                    print ("awaiting pending commands " + str(i))
+                time.sleep(self.wait_sleep)
+                ip.kernel.do_one_iteration()
+                if not self.command_pending:
+                    break
+        if strict:
+            assert not self.command_pending, "timeout awaiting pending commands."
+
 
     def get_style(self):
         "Get the current SVG style."
@@ -263,8 +289,10 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
         
     def send_commands(self):
         "Send all commands in the command buffer to the JS interpreter."
+        self.await_pending_commands()
         bc = self.buffered_commands
         if bc:
+            self.command_pending = True
             self.commands = json.dumps(bc)
         self.buffered_commands = None
         
