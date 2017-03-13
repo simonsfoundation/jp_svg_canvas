@@ -87,16 +87,20 @@ define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
         
         commands_changed: function() {
             var that = this;
-            var svg = that.$svg[0];
-            var commands = that.get_JSON("commands")
-            for (var i=0; i<commands.length; i++) {
-                var command_dict = commands[i];
-                var indicator = command_dict["command"];
-                var method = that["do_"+indicator];
-                method(that, command_dict);
+            try {
+                var svg = that.$svg[0];
+                var commands = that.get_JSON("commands")
+                for (var i=0; i<commands.length; i++) {
+                    var command_dict = commands[i];
+                    var indicator = command_dict["command"];
+                    var method = that["do_"+indicator];
+                    method(that, command_dict);
+                }
             }
-            that.model.set("command_pending", false);
-            that.touch();
+            finally {
+                that.model.set("command_pending", false);
+                that.touch();
+            }
         },
 
         do_fit: function(that, info) {
