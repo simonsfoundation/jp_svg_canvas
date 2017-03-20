@@ -63,6 +63,8 @@ define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
             that.model.on("change:style", that.svg_parameters_changed, that);
             that.model.on("change:watch_event", that.start_watch_event, that);
             that.model.on("change:unwatch_event", that.stop_watch_event, that);
+            that.model.set("rendered", true);
+            that.touch();
         },
         
         start_watch_event: function() {

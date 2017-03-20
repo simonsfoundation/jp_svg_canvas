@@ -244,6 +244,9 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
     
     # Event captured (sent from js, jason encoded).
     event = Unicode("{}", sync=True)
+
+    # Set by JS after render is complete
+    rendered = Bool(False, sync=True)
     
     # Buffered commands, list of dictionary (or None)
     buffered_commands = None
@@ -260,6 +263,7 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
     def __init__(self, *pargs, **kwargs):
         super(SVGCanvasWidget, self).__init__(*pargs, **kwargs)
         self.on_trait_change(self.handle_event_change, "event")
+        self.on_trait_change(self.send_commands, "rendered")
         self.name_counter = 0
         self.verbose = False
         self.default_event_callback = None
@@ -291,6 +295,10 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
         
     def send_commands(self):
         "Send all commands in the command buffer to the JS interpreter."
+        if not self.rendered:
+            if self.verbose:
+                print ("not sending commands because render has not happened yet.")
+            return
         self.await_pending_commands()
         bc = self.buffered_commands
         if bc:
