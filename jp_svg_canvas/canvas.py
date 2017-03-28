@@ -304,10 +304,11 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
         self.await_pending_commands()
         # Update the counter so every command sequence is distinct
         self.command_counter += 1
-        bc = [self.command_counter, self.buffered_commands]
+        bc = self.buffered_commands
         if bc:
+            command_pair = [self.command_counter, bc]
             self.command_pending = True
-            self.commands = json.dumps(bc)
+            self.commands = json.dumps(command_pair)
         self.buffered_commands = None
         
     def add_element(self, name, tagname, attribute_dict, style_dict=None, text=None, event_callback=None):
