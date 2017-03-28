@@ -9,6 +9,10 @@ define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
     
     var svgEventHandlerFactory = function(that) {
         var svgEventHandler = function(e) {
+            // ignore events while there are pending commands.
+            if (that.model.get("command_pending")) {
+                return;
+            }
             var target = e.target;
             var info = {};
             for (var attr in e) {
@@ -43,6 +47,7 @@ define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
     var SVGCanvasView = widgets.DOMWidgetView.extend({
         
         render: function() {
+            //debugger;
             var that = this;
             var svg = that.svg_elt("svg");
             var eventHandler = svgEventHandlerFactory(that);
@@ -91,7 +96,12 @@ define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
             var that = this;
             try {
                 var svg = that.$svg[0];
-                var commands = that.get_JSON("commands")
+                var commands_pair = that.get_JSON("commands")
+                // ignore the counter
+                var commands = [];
+                if (commands_pair.length > 0) {
+                    commands = commands_pair[1];
+                }
                 for (var i=0; i<commands.length; i++) {
                     var command_dict = commands[i];
                     var indicator = command_dict["command"];

@@ -292,6 +292,8 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
         if self.buffered_commands is None:
             self.buffered_commands = []
         self.buffered_commands.append(dictionary)
+
+    command_counter = 0
         
     def send_commands(self):
         "Send all commands in the command buffer to the JS interpreter."
@@ -300,7 +302,9 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
                 print ("not sending commands because render has not happened yet.")
             return
         self.await_pending_commands()
-        bc = self.buffered_commands
+        # Update the counter so every command sequence is distinct
+        self.command_counter += 1
+        bc = [self.command_counter, self.buffered_commands]
         if bc:
             self.command_pending = True
             self.commands = json.dumps(bc)
