@@ -12,6 +12,8 @@ Notebooks.
 # an exhaustive set of features.
 
 from IPython.display import display, HTML
+from . import canvas
+import json
 
 EMBEDDING_COUNT = [0]
 
@@ -116,8 +118,18 @@ class FakeCanvasWidget(object):
              event_cb=None, style_dict=None, **other_attributes):
         if not style_dict:
             style_dict = {}
+        # support (some) SVG stroke attributes
+        dash = "[]"
+        if canvas.DASHARRAY in other_attributes:
+            array_str = other_attributes[canvas.DASHARRAY]
+            dash = "[%s]" % array_str
+        if canvas.STROKE in other_attributes:
+            color = other_attributes[canvas.STROKE]
+        if canvas.WIDTH in other_attributes:
+            width = other_attributes[canvas.WIDTH]
         self._add("ctx.beginPath")
         self._assign("ctx.strokeStyle", color)
+        self._add("ctx.setLineDash", json.loads(dash))
         self._assign("ctx.lineWidth", width)
         self._add("ctx.moveTo", x1, y1)
         self._add("ctx.lineTo", x2, y2)
