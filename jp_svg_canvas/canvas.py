@@ -18,6 +18,15 @@ import time
 # the two interpreters.  It may be possible to remove
 # this approach now or later.
 
+# Other stroke attributes for line styling
+STROKE_ATTRIBUTES = """
+stroke stroke-width stroke-linecap stroke-dasharray
+stroke-linejoin stroke-opacity
+""".split()
+
+[STROKE, WIDTH, LINECAP, DASHARRAY, LINEJOIN, OPACITY] = STROKE_ATTRIBUTES
+
+
 JS_LOADED = [False]
 
 def load_javascript_support(verbose=False, force=False):
@@ -162,6 +171,10 @@ class SVGHelperMixin(HasTraits):
         if width:
             atts["stroke-width"] = width
         atts["stroke"] = color
+        # use stroke attributes specified if provided.
+        for att_name in STROKE_ATTRIBUTES:
+            if att_name in other_attributes:
+                atts[att_name] = other_attributes[att_name]
         self.add_element(name, tag, atts, style_dict, event_callback=event_cb)
         
     def circle(self, name, cx, cy, r, fill="black", event_cb=None, style_dict=None,
