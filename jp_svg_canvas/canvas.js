@@ -5,7 +5,7 @@
 
 require.undef("SVGCanvas");
 
-define("SVGCanvas", ["jupyter-js-widgets"], function(widgets) {
+define("SVGCanvas", ['@jupyter-widgets/base'], function(widgets) {
     
     var svgEventHandlerFactory = function(that) {
         var svgEventHandler = function(e) {
