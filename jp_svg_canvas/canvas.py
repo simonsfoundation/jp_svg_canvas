@@ -18,6 +18,8 @@ import time
 # the two interpreters.  It may be possible to remove
 # this approach now or later.
 
+print ("loaded test version...")
+
 # Other stroke attributes for line styling
 STROKE_ATTRIBUTES = """
 stroke stroke-width stroke-linecap stroke-dasharray
@@ -75,10 +77,10 @@ class SVGHelperMixin(HasTraits):
     svg_height = Float(500, sync=True)
     
     # SVG styling, JSON encoded dictionary
-    style = Unicode("{}", sync=True)
+    svg_style = Unicode("{}", sync=True)
     
     # JSON encoded sequence of dictionaries describing actions.
-    commands = Unicode("[]", sync=True)
+    #commands = Unicode("[]", sync=True)
 
     # flag that indicates a command is pending for execution
     command_pending = Bool(False, sync=True)
@@ -90,7 +92,7 @@ class SVGHelperMixin(HasTraits):
     unwatch_event = Unicode("", sync=True)
     
     # Event captured (sent from js, jason encoded).
-    event = Unicode("{}", sync=True)
+    #event = Unicode("{}", sync=True)
     
     # Buffered commands, list of dictionary (or None)
     buffered_commands = None
@@ -128,11 +130,11 @@ class SVGHelperMixin(HasTraits):
 
     def get_style(self):
         "Get the current SVG style."
-        return json.loads(self.style)
+        return json.loads(self.svg_style)
     
     def set_style(self, style_dict):
         "Set the current SVG style."
-        self.style = json.dumps(style_dict)
+        self.svg_style = json.dumps(style_dict)
         
     def add_style(self, key, value):
         "Add an entry to the SVG style."
@@ -244,10 +246,10 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
     svg_height = Float(500, sync=True)
     
     # SVG styling, JSON encoded dictionary
-    style = Unicode("{}", sync=True)
+    svg_style = Unicode("{}", sync=True)
     
     # JSON encoded sequence of dictionaries describing actions.
-    commands = Unicode("[]", sync=True)
+    #commands = Unicode("[]", sync=True)
     
     # White separated names of event to watch
     watch_event = Unicode("", sync=True)
@@ -256,7 +258,7 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
     unwatch_event = Unicode("", sync=True)
     
     # Event captured (sent from js, jason encoded).
-    event = Unicode("{}", sync=True)
+    #event = Unicode("{}", sync=True)
 
     # Set by JS after render is complete
     rendered = Bool(False, sync=True)
@@ -275,30 +277,49 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
 
     def __init__(self, *pargs, **kwargs):
         super(SVGCanvasWidget, self).__init__(*pargs, **kwargs)
-        self.on_trait_change(self.handle_event_change, "event")
+        #self.on_trait_change(self.handle_event_change, "event")
         self.on_trait_change(self.send_commands, "rendered")
+        self.on_msg(self.handle_custom_message)
         self.name_counter = 0
         self.verbose = False
         self.default_event_callback = None
         self.name_to_callback = {}
+        self._last_message_data = None
+        self._status = "initialized"
+        self._exception = None
+
+    def handle_custom_message(self, widget, data, *etcetera):
+        self._last_message_data = data
+        self._status = "got custom message"
+        indicator = data["indicator"]
+        payload = data["payload"]
+        if indicator == "event":
+            self._status = "handling event"
+            self.handle_event(payload)
+        else:
+            self._status = "unknown message indicator " + repr(indicator)
         
     def set_event_callback(self, callback):
         "Set the default callback to use if not handled by local callback."
         self.default_event_callback = callback
         
-    def handle_event_change(self, att_name, old, new):
+    def handle_event(self, info):
         "Dispatch an event sent from javascript to a registered callback."
-        if new:
-            info = json.loads(new)
-            name = info.get("name")
-            if self.verbose:
-                print ("got event", name)
-                print (pprint.pformat(info))
-            callback = self.default_event_callback
-            if self.local_events:
-                callback = self.name_to_callback.get(name, callback)
-            if callback is not None:
-                callback(info)
+        try:
+            if info:
+                #info = json.loads(new)
+                name = info.get("name")
+                if self.verbose:
+                    self._status = "event from " + repr(name)
+                callback = self.default_event_callback
+                if self.local_events:
+                    callback = self.name_to_callback.get(name, callback)
+                if callback is not None:
+                    self._status = "event callback " + repr(callback)
+                    callback(info)
+        except Exception as e:
+            self._status = "exception in event handling: " + repr(e)
+            self._exception = e
     
     def add_command(self, dictionary):
         "Append a command to the command buffer."
@@ -321,7 +342,8 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
         if bc:
             command_pair = [self.command_counter, bc]
             self.command_pending = True
-            self.commands = json.dumps(command_pair)
+            #self.commands = json.dumps(command_pair)
+            self.send(command_pair)
         self.buffered_commands = None
         
     def add_element(self, name, tagname, attribute_dict, style_dict=None, text=None, event_callback=None):
@@ -379,4 +401,4 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
 
     def get_style(self):
         "Get the current SVG style."
-        return json.loads(self.style)
+        return json.loads(self.svg_style)

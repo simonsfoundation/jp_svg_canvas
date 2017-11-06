@@ -1,4 +1,4 @@
-
+debugger;
 // imitating ipywidgets/docs/source/examples/Custom Widget - Hello World.ipynb
 
 //require(["widgets/js/widget", "widgets/js/manager"], function(widget, manager){
@@ -28,9 +28,14 @@ define("SVGCanvas", ['@jupyter-widgets/base'], function(widgets) {
             var ept = SVGEventLocation(that, e);
             info.svgX = ept.x;
             info.svgY = ept.y;
-            var json = JSON.stringify(info);
-            that.model.set("event", json);
-            that.touch();
+            var message = {
+                "indicator": "event",
+                "payload": info
+            };
+            that.model.send(message);
+            //var json = JSON.stringify(info);
+            //that.model.set("event", json);
+            //that.touch();
         };
         return svgEventHandler;
     };
@@ -47,7 +52,7 @@ define("SVGCanvas", ['@jupyter-widgets/base'], function(widgets) {
     var SVGCanvasView = widgets.DOMWidgetView.extend({
         
         render: function() {
-            //debugger;
+            debugger;
             var that = this;
             var svg = that.svg_elt("svg");
             var eventHandler = svgEventHandlerFactory(that);
@@ -59,13 +64,16 @@ define("SVGCanvas", ['@jupyter-widgets/base'], function(widgets) {
             svg.setAttribute("preserveAspectRatio", "none");
             that.$el.append(that.$svg);
             that.svg_parameters_changed();
-            that.commands_changed();
+            //that.commands_changed();
             that.start_watch_event();
-            that.model.on("change:commands", that.commands_changed, that);
+            //that.model.on("change:commands", that.commands_changed, that);
+            that.model.on("msg:custom", function(content, buffers, widget) {
+                that.handle_custom_message(content, buffers, widget);
+            });
             that.model.on("change:viewBox", that.svg_parameters_changed, that);
             that.model.on("change:svg_width", that.svg_parameters_changed, that);
             that.model.on("change:svg_height", that.svg_parameters_changed, that);
-            that.model.on("change:style", that.svg_parameters_changed, that);
+            that.model.on("change:svg_style", that.svg_parameters_changed, that);
             that.model.on("change:watch_event", that.start_watch_event, that);
             that.model.on("change:unwatch_event", that.stop_watch_event, that);
             that.model.set("rendered", true);
@@ -92,11 +100,11 @@ define("SVGCanvas", ['@jupyter-widgets/base'], function(widgets) {
             }
         },
         
-        commands_changed: function() {
+        handle_custom_message: function(commands_pair, buffers, widget) {
             var that = this;
             try {
                 var svg = that.$svg[0];
-                var commands_pair = that.get_JSON("commands")
+                //var commands_pair = that.get_JSON("commands")
                 // ignore the counter
                 var commands = [];
                 if (commands_pair.length > 0) {
@@ -194,7 +202,7 @@ define("SVGCanvas", ['@jupyter-widgets/base'], function(widgets) {
         
         svg_parameters_changed: function() {
             var that = this;
-            var style_additions = that.get_JSON("style");
+            var style_additions = that.get_JSON("svg_style");
             var svg = that.$svg[0];
             svg.setAttribute("viewBox", that.model.get("viewBox"));
             svg.setAttribute("width", that.model.get("svg_width"));
