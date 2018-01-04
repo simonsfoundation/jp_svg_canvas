@@ -18,8 +18,6 @@ import time
 # the two interpreters.  It may be possible to remove
 # this approach now or later.
 
-print ("loaded test version...")
-
 # Other stroke attributes for line styling
 STROKE_ATTRIBUTES = """
 stroke stroke-width stroke-linecap stroke-dasharray
