@@ -6,13 +6,40 @@ debugger;
 require.undef("SVGCanvas");
 
 define("SVGCanvas", ['@jupyter-widgets/base'], function(widgets) {
-    
+    debugger;
     var svgEventHandlerFactory = function(that) {
+        // each animation frame only send one event of each type
+        var messages = [];
+        var bufferMessage = function(message) {
+            var typ = message.payload.type;
+            var old_messages = messages;
+            var new_messages = [];
+            for (var i=0; i<old_messages.length; i++) {
+                var old_message = old_messages[i];
+                if (old_message.payload.type != typ) {
+                    new_messages.push(old_message)
+                }
+            }
+            new_messages.push(message);
+            messages = new_messages;
+            if (old_messages.length == 0) {
+                //requestAnimationFrame(sendMessagesAtFrame);
+                setTimeout(sendMessagesAtFrame, 100);
+            }
+        };
+        var sendMessagesAtFrame = function () {
+            var msgs = messages;
+            messages = [];
+            for (var i=0; i<msgs.length; i++) {
+                var message = msgs[i];
+                that.model.send(message);
+            }
+        };
         var svgEventHandler = function(e) {
             // ignore events while there are pending commands.
-            if (that.model.get("command_pending")) {
-                return;
-            }
+            //if (that.model.get("command_pending")) {
+            //    return;
+            //}
             var target = e.target;
             var info = {};
             for (var attr in e) {
@@ -32,7 +59,8 @@ define("SVGCanvas", ['@jupyter-widgets/base'], function(widgets) {
                 "indicator": "event",
                 "payload": info
             };
-            that.model.send(message);
+            bufferMessage(message);
+            //that.model.send(message);
             //var json = JSON.stringify(info);
             //that.model.set("event", json);
             //that.touch();
