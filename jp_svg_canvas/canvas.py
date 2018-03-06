@@ -333,7 +333,7 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
             if self.verbose:
                 print ("not sending commands because render has not happened yet.")
             return
-        self.await_pending_commands()
+        #self.await_pending_commands()
         # Update the counter so every command sequence is distinct
         self.command_counter += 1
         bc = self.buffered_commands
