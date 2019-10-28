@@ -166,6 +166,16 @@ define("SVGCanvas", ['@jupyter-widgets/base'], function(widgets) {
                 that.touch();
             }
         },
+
+        do_get_SVG_text(that, info) {
+            // deliver the SVG text to the python kernel
+            var text = that.$svg[0].innerHTML;
+            var message = {
+                "indicator": "SVG_text",
+                "payload": text
+            };
+            that.model.send(message);
+        },
         
         do_add_element: function (that, info) {
             var tag = info.tag;

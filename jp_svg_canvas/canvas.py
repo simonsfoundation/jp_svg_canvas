@@ -285,6 +285,8 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
         self._last_message_data = None
         self._status = "initialized"
         self._exception = None
+        self.last_svg_text = None
+        self.svg_text_callback = None
 
     def handle_custom_message(self, widget, data, *etcetera):
         self._last_message_data = data
@@ -294,8 +296,19 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
         if indicator == "event":
             self._status = "handling event"
             self.handle_event(payload)
+        elif indicator == "SVG_text":
+            self.status = "handling SVG text"
+            self.handle_svg(payload)
         else:
             self._status = "unknown message indicator " + repr(indicator)
+
+    def handle_svg(self, svg_text):
+        self.last_svg_text = svg_text
+        callback = self.svg_text_callback
+        if callback is not None:
+            callback(svg_text)
+        # only use the callback once
+        self.svg_text_callback = None
         
     def set_event_callback(self, callback):
         "Set the default callback to use if not handled by local callback."
@@ -396,6 +409,27 @@ class SVGCanvasWidget(widgets.DOMWidget, SVGHelperMixin):
         "add a 'fit' command to the command buffer (fit to bounding box)"
         command = {"command": "fit", "changeView": changeView}
         self.add_command(command)
+
+    def get_SVG_text(self, callback=None):
+        "get the SVG text asynchronously"
+        self.svg_text_callback = callback
+        command = {"command": "get_SVG_text"}
+        self.add_command(command)
+        self.send_commands()
+
+    def save_as_SVG_file(self, path="Diagram.svg"):
+        print ("Saving as " + repr(path) + " asynchronously.") 
+        start = u'<svg preserveAspectRatio="none" viewBox="%s" width="%s" height="%s">' %(
+            self.viewBox, self.svg_width, self.svg_height
+        )
+        f = open(path, "w")
+        def callback(text):
+            L = [start, text, u"</svg>"]
+            for x in L:
+                f.write(x)
+                f.write(u"\n")
+            f.close()
+        self.get_SVG_text(callback)
 
     def get_style(self):
         "Get the current SVG style."
